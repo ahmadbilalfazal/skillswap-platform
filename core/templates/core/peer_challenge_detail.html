@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}{{ challenge.title }} — SkillSwap{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+  <aside class="card p-6">
+    <span class="rounded-full bg-purple-100 text-purple-700 px-3 py-1 text-xs font-black dark:bg-purple-950 dark:text-purple-200">{{ challenge.get_mode_display }}</span>
+    <h1 class="text-3xl font-black mt-4">{{ challenge.title }}</h1>
+    <p class="text-slate-500 mt-2">{{ challenge.creator.username }} challenged {{ challenge.target.username }}</p>
+
+    <div class="mt-5 grid grid-cols-2 gap-3">
+      <div class="rounded-2xl bg-slate-100 p-3 dark:bg-slate-900"><p class="text-sm text-slate-500">Status</p><p class="font-black">{{ challenge.get_status_display }}</p></div>
+      <div class="rounded-2xl bg-slate-100 p-3 dark:bg-slate-900"><p class="text-sm text-slate-500">Progress</p><p class="font-black">{{ challenge.progress_percent }}%</p></div>
+    </div>
+
+    {% if challenge.skill_focus %}
+      <p class="mt-4 text-sm"><span class="font-black">Skill focus:</span> {{ challenge.skill_focus }}</p>
+    {% endif %}
+    {% if challenge.due_at %}
+      <p class="mt-2 text-sm"><span class="font-black">Due:</span> {{ challenge.due_at }}</p>
+    {% endif %}
+
+    <div class="mt-5 h-3 rounded-full bg-slate-200 dark:bg-slate-800">
+      <div class="h-3 rounded-full bg-purple-600" style="width: {{ challenge.progress_percent }}%"></div>
+    </div>
+
+    <div class="mt-5 flex flex-wrap gap-2">
+      <a href="{% url 'peer_challenges_list' %}" class="rounded-full border px-4 py-2 font-bold dark:border-slate-700">Back</a>
+      {% if challenge.target == user and challenge.status == 'pending' %}
+        <form method="post" action="{% url 'accept_peer_challenge' challenge.id %}">{% csrf_token %}<button class="rounded-full bg-emerald-600 px-4 py-2 font-bold text-white">Accept</button></form>
+        <form method="post" action="{% url 'reject_peer_challenge' challenge.id %}">{% csrf_token %}<button class="rounded-full border border-red-200 px-4 py-2 font-bold text-red-600">Reject</button></form>
+      {% endif %}
+      {% if can_cancel %}
+        <form method="post" action="{% url 'cancel_peer_challenge' challenge.id %}">{% csrf_token %}<button class="rounded-full border border-red-200 px-4 py-2 font-bold text-red-600">Cancel</button></form>
+      {% endif %}
+    </div>
+  </aside>
+
+  <main class="lg:col-span-2 space-y-6">
+    <section class="card p-6">
+      <h2 class="text-2xl font-black mb-3">Challenge brief</h2>
+      <p class="text-slate-600 dark:text-slate-300 whitespace-pre-line">{{ challenge.description }}</p>
+    </section>
+
+    {% if can_submit_proof %}
+      <section class="card p-6">
+        <h2 class="text-2xl font-black mb-3">Submit your proof</h2>
+        <form method="post" enctype="multipart/form-data" action="{% url 'submit_peer_challenge_proof' challenge.id %}" class="space-y-4">
+          {% csrf_token %}
+          {{ proof_form.as_p }}
+          <button class="rounded-full bg-purple-600 px-5 py-3 font-bold text-white">Submit proof</button>
+        </form>
+      </section>
+    {% elif challenge.status == 'accepted' and user_has_submitted %}
+      <section class="card p-6">
+        <h2 class="text-2xl font-black">Your proof is submitted ✅</h2>
+        <p class="mt-2 text-slate-600 dark:text-slate-300">Waiting for the remaining required proof if this is a shared challenge.</p>
+      </section>
+    {% endif %}
+
+    <section class="card p-6">
+      <h2 class="text-2xl font-black mb-4">Proof board</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div class="rounded-3xl border p-5 dark:border-slate-700">
+          <p class="text-sm text-slate-500">Creator</p>
+          <h3 class="text-xl font-black">{{ challenge.creator.username }}</h3>
+          {% if challenge.creator_completed_at %}
+            <p class="mt-3 font-bold">{{ challenge.creator_proof_title }}</p>
+            {% if challenge.creator_proof_file %}<a href="{{ challenge.creator_proof_file.url }}" target="_blank" class="inline-flex mt-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white">Download / open proof file</a><p class="mt-1 text-xs text-slate-500 break-all">{{ challenge.creator_proof_file.name }}</p>{% endif %}
+            {% if challenge.creator_reflection %}<p class="mt-2 text-slate-600 dark:text-slate-300">{{ challenge.creator_reflection }}</p>{% endif %}
+          {% else %}
+            <p class="mt-3 text-slate-500">No proof submitted yet.</p>
+          {% endif %}
+        </div>
+
+        <div class="rounded-3xl border p-5 dark:border-slate-700">
+          <p class="text-sm text-slate-500">Target user</p>
+          <h3 class="text-xl font-black">{{ challenge.target.username }}</h3>
+          {% if challenge.target_completed_at %}
+            <p class="mt-3 font-bold">{{ challenge.target_proof_title }}</p>
+            {% if challenge.target_proof_file %}<a href="{{ challenge.target_proof_file.url }}" target="_blank" class="inline-flex mt-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white">Download / open proof file</a><p class="mt-1 text-xs text-slate-500 break-all">{{ challenge.target_proof_file.name }}</p>{% endif %}
+            {% if challenge.target_reflection %}<p class="mt-2 text-slate-600 dark:text-slate-300">{{ challenge.target_reflection }}</p>{% endif %}
+          {% else %}
+            <p class="mt-3 text-slate-500">No proof submitted yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}Moderation — SkillSwap{% endblock %}
+{% block content %}
+<div class="mb-8">
+  <h1 class="text-4xl font-black">Admin moderation center</h1>
+  <p class="text-slate-600 dark:text-slate-300 mt-2">Review reports, approve verified peers, and monitor platform activity.</p>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6">
+  <section class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Pending verification requests</h2>
+    <div class="space-y-3">
+      {% for item in verification_requests %}
+        <div class="rounded-2xl border p-4 dark:border-slate-700">
+          <div class="flex items-start justify-between gap-3">
+            <div>
+              <p class="font-black">{{ item.user.username }}</p>
+              <p class="text-sm text-slate-500">{{ item.headline }}</p>
+            </div>
+            <a class="text-blue-600 font-bold text-sm" href="{% url 'profile_detail' item.user.username %}">Profile</a>
+          </div>
+          <p class="mt-3 text-sm whitespace-pre-line text-slate-600 dark:text-slate-300">{{ item.proof_links|truncatechars:240 }}</p>
+          <div class="mt-3 flex gap-2">
+            <form method="post" action="{% url 'approve_verification' item.id %}">{% csrf_token %}<button class="rounded-full bg-emerald-600 px-4 py-2 text-sm font-bold text-white">Approve</button></form>
+            <form method="post" action="{% url 'reject_verification' item.id %}">{% csrf_token %}<button class="rounded-full bg-red-600 px-4 py-2 text-sm font-bold text-white">Reject</button></form>
+          </div>
+        </div>
+      {% empty %}<p class="text-slate-500">No pending verification requests.</p>{% endfor %}
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Open user reports</h2>
+    <div class="space-y-3">
+      {% for report in reports %}
+        <div class="rounded-2xl border p-4 dark:border-slate-700">
+          <p><b>{{ report.reporter.username }}</b> reported <b>{{ report.reported_user.username }}</b></p>
+          <p class="text-sm text-slate-500">Reason: {{ report.get_reason_display }}</p>
+          <p class="mt-2 text-sm text-slate-600 dark:text-slate-300">{{ report.details|default:'No details provided.' }}</p>
+          <form method="post" action="{% url 'resolve_report' report.id %}" class="mt-3">{% csrf_token %}<button class="rounded-full bg-slate-900 px-4 py-2 text-sm font-bold text-white dark:bg-white dark:text-slate-900">Mark resolved</button></form>
+        </div>
+      {% empty %}<p class="text-slate-500">No open reports.</p>{% endfor %}
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Latest users</h2>
+    <div class="space-y-3">
+      {% for u in latest_users %}
+        <a href="{% url 'profile_detail' u.username %}" class="block rounded-2xl border p-4 dark:border-slate-700"><b>{{ u.username }}</b><p class="text-sm text-slate-500">Joined {{ u.date_joined|date:'M d, Y' }}</p></a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Latest sessions</h2>
+    <div class="space-y-3">
+      {% for session in latest_sessions %}
+        <a href="{% url 'session_detail' session.id %}" class="block rounded-2xl border p-4 dark:border-slate-700"><b>{{ session.request.sender.username }}</b> ↔ <b>{{ session.request.receiver.username }}</b><p class="text-sm text-slate-500">{{ session.created_at|date:'M d, Y H:i' }}</p></a>
+      {% empty %}<p class="text-slate-500">No sessions yet.</p>{% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

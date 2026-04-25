@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.username }} — SkillSwap{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+  <aside class="card p-6">
+    <div class="h-24 w-24 rounded-3xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-4xl text-white font-black">{{ profile_user.username|first|upper }}</div>
+    <div class="mt-4 flex items-center gap-2 flex-wrap">
+      <h1 class="text-3xl font-black">{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+      {% if profile_user.profile.is_verified_peer %}<span class="rounded-full bg-emerald-100 text-emerald-700 px-3 py-1 text-xs font-black dark:bg-emerald-950 dark:text-emerald-200">Verified peer</span>{% endif %}
+    </div>
+    <p class="text-slate-500">@{{ profile_user.username }}</p>
+    <p class="mt-4 text-slate-600 dark:text-slate-300">{{ profile_user.profile.bio|default:'No bio added yet.' }}</p>
+    <div class="mt-5 grid grid-cols-2 gap-3">
+      <div class="rounded-2xl bg-slate-100 p-3 dark:bg-slate-900"><p class="text-sm text-slate-500">Rating</p><p class="font-black text-2xl">{{ profile_user.profile.average_rating }} ⭐</p></div>
+      <div class="rounded-2xl bg-slate-100 p-3 dark:bg-slate-900"><p class="text-sm text-slate-500">Sessions</p><p class="font-black text-2xl">{{ profile_user.profile.completed_sessions_count }}</p></div>
+    </div>
+
+    <section class="mt-5">
+      <h2 class="font-black mb-2">Badges</h2>
+      <div class="flex flex-wrap gap-2">
+        {% for user_badge in profile_user.badges.all %}
+          <span class="rounded-full border px-3 py-2 text-sm font-bold dark:border-slate-700">{{ user_badge.badge.icon }} {{ user_badge.badge.name }}</span>
+        {% empty %}
+          <p class="text-sm text-slate-500">No badges yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    {% if latest_verification and not profile_user.profile.is_verified_peer %}
+      <div class="mt-5 rounded-2xl border p-4 text-sm dark:border-slate-700">
+        <p class="font-black">Verification status</p>
+        <p class="text-slate-500">{{ latest_verification.get_status_display }}</p>
+      </div>
+    {% endif %}
+
+    {% if user != profile_user %}
+      <div class="mt-5 flex flex-wrap gap-2">
+        <a href="{% url 'send_swap_request' profile_user.username %}" class="rounded-full bg-blue-600 px-5 py-3 text-white font-bold">Request swap</a>
+        <a href="{% url 'create_peer_challenge' profile_user.username %}" class="rounded-full bg-purple-600 px-5 py-3 text-white font-bold">Challenge user</a>
+        <a href="{% url 'toggle_favorite' profile_user.username %}" class="rounded-full border px-5 py-3 font-bold dark:border-slate-700">{% if is_favorite %}Unsave{% else %}Save{% endif %}</a>
+        <a href="{% url 'report_user' profile_user.username %}" class="rounded-full border border-red-200 text-red-600 px-5 py-3 font-bold">Report</a>
+      </div>
+    {% else %}
+      <div class="mt-5 flex flex-wrap gap-2">
+        <a href="{% url 'edit_profile' %}" class="rounded-full bg-blue-600 px-5 py-3 text-white font-bold">Edit profile</a>
+        {% if not user.profile.is_verified_peer %}<a href="{% url 'request_verification' %}" class="rounded-full border px-5 py-3 font-bold dark:border-slate-700">Request verification</a>{% endif %}
+      </div>
+    {% endif %}
+  </aside>
+
+  <main class="lg:col-span-2 space-y-6">
+    <section class="card p-6"><h2 class="text-2xl font-black mb-4">Can teach</h2><div class="flex flex-wrap gap-2">{% for item in have_skills %}<span class="rounded-full bg-blue-100 text-blue-700 px-4 py-2 font-bold dark:bg-blue-950 dark:text-blue-200">{{ item.skill.name }} · {{ item.level }}</span>{% empty %}<p class="text-slate-500">No teachable skills yet.</p>{% endfor %}</div></section>
+    <section class="card p-6"><h2 class="text-2xl font-black mb-4">Wants to learn</h2><div class="flex flex-wrap gap-2">{% for item in want_skills %}<span class="rounded-full bg-purple-100 text-purple-700 px-4 py-2 font-bold dark:bg-purple-950 dark:text-purple-200">{{ item.skill.name }} · {{ item.level }}</span>{% empty %}<p class="text-slate-500">No learning goals yet.</p>{% endfor %}</div></section>
+
+    <section class="card p-6">
+      <h2 class="text-2xl font-black mb-4">Growth timeline</h2>
+      <div class="space-y-4">
+        {% for event in growth_events %}
+          <div class="flex gap-4 rounded-2xl border p-4 dark:border-slate-700">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-xl dark:bg-slate-900">{{ event.icon }}</div>
+            <div>
+              <p class="font-black">{{ event.title }}</p>
+              <p class="text-sm text-slate-500">{{ event.created_at|date:'M d, Y' }}</p>
+              {% if event.description %}<p class="mt-1 text-slate-600 dark:text-slate-300">{{ event.description }}</p>{% endif %}
+              {% if event.url %}<a href="{{ event.url }}" class="mt-2 inline-block text-sm font-bold text-blue-600">Open related item</a>{% endif %}
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-slate-500">No public growth activity yet.</p>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section class="card p-6"><h2 class="text-2xl font-black mb-4">Reviews</h2>{% for review in reviews %}<div class="border-b py-4 dark:border-slate-700"><p class="font-black">{{ review.rating }} ⭐ from {{ review.reviewer.username }}</p><p class="text-slate-600 dark:text-slate-300">{{ review.comment }}</p></div>{% empty %}<p class="text-slate-500">No reviews yet.</p>{% endfor %}</section>
+  </main>
+</div>
+{% endblock %}

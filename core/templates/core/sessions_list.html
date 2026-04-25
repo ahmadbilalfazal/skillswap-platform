@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Sessions — SkillSwap{% endblock %}
+{% block content %}
+<h1 class="text-4xl font-black mb-6">Exchange sessions</h1>
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+  {% for session in sessions %}
+    <a class="card p-5 block hover:scale-[1.01] transition" href="{% url 'session_detail' session.id %}">
+      <h2 class="text-xl font-black">{{ session.request.teach_skill }} ↔ {{ session.request.learn_skill }}</h2>
+      <p class="text-slate-500 mt-1">{{ session.request.sender.username }} and {{ session.request.receiver.username }}</p>
+      <p class="mt-3 text-sm">{% if session.scheduled_at %}{{ session.scheduled_at }}{% else %}Not scheduled yet{% endif %}</p>
+      <span class="mt-4 inline-block rounded-full {% if session.is_completed %}bg-emerald-100 text-emerald-700{% else %}bg-yellow-100 text-yellow-700{% endif %} px-3 py-1 text-sm font-black">{% if session.is_completed %}Completed{% else %}Active{% endif %}</span>
+    </a>
+  {% empty %}<p class="text-slate-500">No sessions yet. Accept a request to create one.</p>{% endfor %}
+</div>
+{% endblock %}

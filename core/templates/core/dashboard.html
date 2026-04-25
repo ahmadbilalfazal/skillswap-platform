@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — SkillSwap{% endblock %}
+{% block content %}
+<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+  <div>
+    <h1 class="text-4xl font-black">Welcome, {{ user.first_name|default:user.username }} 👋</h1>
+    <p class="text-slate-600 dark:text-slate-300 mt-2">Manage your skills, requests, sessions, reviews, and verified growth proof.</p>
+  </div>
+  <div class="flex gap-3 flex-wrap">
+    <a href="{% url 'manage_skills' %}" class="rounded-full bg-blue-600 px-5 py-3 text-white font-bold">Add skills</a>
+    <a href="{% url 'explore_users' %}" class="rounded-full border px-5 py-3 font-bold dark:border-slate-700">Explore users</a>
+  </div>
+</div>
+
+<section class="card p-6 mb-8">
+  <div class="flex items-center justify-between gap-4 mb-3">
+    <div>
+      <h2 class="text-xl font-black">Profile strength</h2>
+      <p class="text-sm text-slate-500">Add bio, location, teach skills, and learning goals to improve matching.</p>
+    </div>
+    <p class="text-2xl font-black">{{ profile_complete }}%</p>
+  </div>
+  <div class="h-4 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
+    <div class="h-full rounded-full bg-blue-600" style="width: {{ profile_complete }}%"></div>
+  </div>
+</section>
+
+<div class="grid md:grid-cols-6 gap-4 mb-8">
+  <div class="card p-5 md:col-span-1"><p class="text-sm text-slate-500">Teach</p><p class="text-4xl font-black">{{ have_count }}</p></div>
+  <div class="card p-5 md:col-span-1"><p class="text-sm text-slate-500">Learn</p><p class="text-4xl font-black">{{ want_count }}</p></div>
+  <div class="card p-5 md:col-span-1"><p class="text-sm text-slate-500">Rating</p><p class="text-4xl font-black">{{ user.profile.average_rating }} ⭐</p></div>
+  <div class="card p-5 md:col-span-1"><p class="text-sm text-slate-500">Done</p><p class="text-4xl font-black">{{ user.profile.completed_sessions_count }}</p></div>
+  <div class="card p-5 md:col-span-1"><p class="text-sm text-slate-500">Proof</p><p class="text-4xl font-black">{{ proof_count }}</p></div>
+  <div class="card p-5 md:col-span-1"><p class="text-sm text-slate-500">Badges</p><p class="text-4xl font-black">{{ badge_count }}</p></div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-6">
+  <section class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Recommended matches</h2>
+    <div class="space-y-3">
+      {% for item in matches %}
+        <div class="rounded-2xl border p-4 dark:border-slate-700 flex items-center justify-between gap-3">
+          <div>
+            <a class="font-black" href="{% url 'profile_detail' item.user.username %}">{{ item.user.get_full_name|default:item.user.username }}</a>
+            <p class="text-sm text-slate-500">Match score: {{ item.score }}% {% if item.reciprocal %}· reciprocal match{% endif %}</p>
+            <p class="text-xs text-slate-400">They can teach {{ item.can_teach_me_count }} skill(s) you want. You can teach {{ item.i_can_teach_count }} skill(s) they want.</p>
+          </div>
+          <a class="rounded-full bg-slate-900 text-white px-4 py-2 text-sm dark:bg-white dark:text-slate-900" href="{% url 'send_swap_request' item.user.username %}">Request</a>
+        </div>
+      {% empty %}
+        <p class="text-slate-500">Add have/want skills to receive match suggestions.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Requests received</h2>
+    <div class="space-y-3">
+      {% for req in received_requests %}
+        <div class="rounded-2xl border p-4 dark:border-slate-700">
+          <p><b>{{ req.sender.username }}</b> wants to exchange <b>{{ req.teach_skill }}</b> for <b>{{ req.learn_skill }}</b></p>
+          <p class="text-sm text-slate-500">Status: {{ req.status }}</p>
+          {% if req.status == 'pending' %}
+            <div class="flex gap-2 mt-3">
+              <form method="post" action="{% url 'accept_swap_request' req.id %}">{% csrf_token %}<button class="rounded-full bg-emerald-600 text-white px-4 py-2 text-sm font-bold">Accept</button></form>
+              <form method="post" action="{% url 'reject_swap_request' req.id %}">{% csrf_token %}<button class="rounded-full bg-red-600 text-white px-4 py-2 text-sm font-bold">Reject</button></form>
+            </div>
+          {% endif %}
+        </div>
+      {% empty %}<p class="text-slate-500">No received requests yet.</p>{% endfor %}
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Requests sent</h2>
+    <div class="space-y-3">
+      {% for req in sent_requests %}
+        <div class="rounded-2xl border p-4 dark:border-slate-700 flex justify-between gap-3">
+          <div><p>To <b>{{ req.receiver.username }}</b>: {{ req.teach_skill }} ↔ {{ req.learn_skill }}</p><p class="text-sm text-slate-500">{{ req.status }}</p></div>
+          {% if req.status == 'pending' %}<form method="post" action="{% url 'cancel_swap_request' req.id %}">{% csrf_token %}<button class="text-red-600 font-bold text-sm">Cancel</button></form>{% endif %}
+        </div>
+      {% empty %}<p class="text-slate-500">No sent requests yet.</p>{% endfor %}
+    </div>
+  </section>
+
+  <section class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Sessions</h2>
+    <div class="space-y-3">
+      {% for session in sessions %}
+        <a href="{% url 'session_detail' session.id %}" class="block rounded-2xl border p-4 dark:border-slate-700 hover:border-blue-400">
+          <b>{{ session.request.sender.username }}</b> ↔ <b>{{ session.request.receiver.username }}</b>
+          <p class="text-sm text-slate-500">{% if session.is_completed %}Completed{% else %}Active{% endif %}</p>
+        </a>
+      {% empty %}<p class="text-slate-500">Accepted requests will appear as sessions.</p>{% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}

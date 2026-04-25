@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Skills — SkillSwap{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+  <div class="card p-6 lg:col-span-1">
+    <h1 class="text-3xl font-black mb-4">Add a skill</h1>
+    <form method="post" class="space-y-4">{% csrf_token %}
+      {% for field in form %}<div class="form-control"><label class="font-bold block mb-2">{{ field.label }}</label>{{ field }}</div>{% endfor %}
+      <button class="rounded-full bg-blue-600 text-white px-5 py-3 font-bold">Save skill</button>
+    </form>
+  </div>
+  <div class="lg:col-span-2 grid md:grid-cols-2 gap-6">
+    <section class="card p-6"><h2 class="text-2xl font-black mb-4">I can teach</h2>{% for item in have_skills %}<div class="rounded-2xl border p-3 mb-2 dark:border-slate-700 flex justify-between"><span>{{ item.skill.name }} <small class="text-slate-500">{{ item.level }}</small></span><form method="post" action="{% url 'delete_user_skill' item.id %}">{% csrf_token %}<button class="text-red-600">Remove</button></form></div>{% empty %}<p class="text-slate-500">No teachable skills yet.</p>{% endfor %}</section>
+    <section class="card p-6"><h2 class="text-2xl font-black mb-4">I want to learn</h2>{% for item in want_skills %}<div class="rounded-2xl border p-3 mb-2 dark:border-slate-700 flex justify-between"><span>{{ item.skill.name }} <small class="text-slate-500">{{ item.level }}</small></span><form method="post" action="{% url 'delete_user_skill' item.id %}">{% csrf_token %}<button class="text-red-600">Remove</button></form></div>{% empty %}<p class="text-slate-500">No learning goals yet.</p>{% endfor %}</section>
+  </div>
+</div>
+{% endblock %}

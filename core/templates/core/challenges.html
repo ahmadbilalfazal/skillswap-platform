@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Challenges — SkillSwap{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+  <div>
+    <h1 class="text-4xl font-black">Weekly challenges</h1>
+    <p class="text-slate-600 dark:text-slate-300 mt-2">Complete small practical tasks and build visible proof on your profile.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'peer_challenges_list' %}" class="rounded-full bg-blue-600 px-5 py-3 font-bold text-white w-fit">My peer challenges</a>
+    <a href="{% url 'challenge_leaderboard' %}" class="rounded-full bg-purple-600 px-5 py-3 font-bold text-white w-fit">Challenge leaderboard</a>
+  </div>
+</div>
+
+{% if rows %}
+<section class="card p-6 mb-8">
+  <div class="flex items-center justify-between gap-3 mb-4">
+    <h2 class="text-2xl font-black">Top challenge performers</h2>
+    <a href="{% url 'challenge_leaderboard' %}" class="text-blue-600 font-bold">View all</a>
+  </div>
+  <div class="grid md:grid-cols-3 gap-3">
+    {% for row in rows|slice:':3' %}
+      <a href="{% url 'profile_detail' row.user.username %}" class="rounded-3xl border p-4 dark:border-slate-700">
+        <p class="text-sm text-slate-500">#{{ forloop.counter }}</p>
+        <p class="text-xl font-black">{{ row.user.get_full_name|default:row.user.username }}</p>
+        <p class="text-sm text-slate-500">{{ row.submissions }} submissions · {{ row.score }} pts</p>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+  {% for challenge in challenges %}
+    <a class="card p-6 block hover:-translate-y-1 transition" href="{% url 'challenge_detail' challenge.id %}">
+      <span class="rounded-full bg-purple-100 text-purple-700 px-3 py-1 text-xs font-black dark:bg-purple-950 dark:text-purple-200">Community challenge</span>
+      <h2 class="text-2xl font-black mt-4">{{ challenge.title }}</h2>
+      <p class="text-slate-600 dark:text-slate-300 mt-2 line-clamp-3">{{ challenge.description }}</p>
+      <p class="text-sm text-slate-500 mt-4">Ends: {{ challenge.ends_at }}</p>
+    </a>
+  {% empty %}
+    <div class="card p-8 md:col-span-2 lg:col-span-3 text-center">
+      <p class="text-slate-500">No active challenges. Create one from the admin panel.</p>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

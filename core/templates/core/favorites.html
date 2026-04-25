@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}Favorites — SkillSwap{% endblock %}
+{% block content %}
+<h1 class="text-4xl font-black mb-6">Saved partners</h1>
+<div class="grid md:grid-cols-3 gap-5">
+  {% for fav in favorites %}
+    <a class="card p-5" href="{% url 'profile_detail' fav.saved_user.username %}"><h2 class="text-xl font-black">{{ fav.saved_user.get_full_name|default:fav.saved_user.username }}</h2><p class="text-slate-500">{{ fav.saved_user.profile.average_rating }} ⭐ · {{ fav.saved_user.profile.get_availability_display }}</p></a>
+  {% empty %}<p class="text-slate-500">No favorites yet.</p>{% endfor %}
+</div>
+{% endblock %}

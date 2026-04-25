@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Session — SkillSwap{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+  <main class="lg:col-span-2 space-y-6">
+    <section class="card p-6">
+      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+        <div>
+          <h1 class="text-3xl font-black">{{ session.request.teach_skill }} ↔ {{ session.request.learn_skill }}</h1>
+          <p class="text-slate-500 mt-1">{{ session.request.sender.username }} and {{ session.request.receiver.username }}</p>
+        </div>
+        <span class="rounded-full px-4 py-2 text-sm font-black {% if session.is_completed %}bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-200{% else %}bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-200{% endif %}">
+          {% if session.is_completed %}Completed{% else %}Active session{% endif %}
+        </span>
+      </div>
+      <div class="mt-5 rounded-3xl overflow-hidden border dark:border-slate-700 bg-slate-900 min-h-[420px]" id="meet"></div>
+      <script src="https://meet.jit.si/external_api.js"></script>
+      <script>
+        const domain = "meet.jit.si";
+        const options = {
+          roomName: "{{ session.video_room_slug }}",
+          width: "100%",
+          height: 420,
+          parentNode: document.querySelector('#meet'),
+          userInfo: { displayName: "{{ user.username }}" }
+        };
+        new JitsiMeetExternalAPI(domain, options);
+      </script>
+    </section>
+
+    <section class="card p-6">
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-2xl font-black">Session chat</h2>
+          <p class="text-sm text-slate-500">Use this for timing, links, goals, questions, and next steps.</p>
+        </div>
+        <a href="{% url 'chat_inbox' %}" class="rounded-full border px-4 py-2 text-sm font-bold dark:border-slate-700">All chats</a>
+      </div>
+      <div class="max-h-[360px] overflow-y-auto space-y-3 rounded-3xl border p-4 dark:border-slate-700 bg-white/40 dark:bg-slate-900/40">
+        {% for chat in chat_messages %}
+          <div class="flex {% if chat.sender == user %}justify-end{% else %}justify-start{% endif %}">
+            <div class="max-w-[80%] rounded-3xl px-4 py-3 {% if chat.sender == user %}bg-blue-600 text-white{% else %}bg-slate-100 dark:bg-slate-800{% endif %}">
+              <p class="text-xs font-black opacity-70">{{ chat.sender.username }} · {{ chat.created_at|date:'M d, H:i' }}</p>
+              <p class="mt-1 whitespace-pre-line">{{ chat.message }}</p>
+            </div>
+          </div>
+        {% empty %}
+          <p class="text-slate-500">No chat messages yet. Start by agreeing the session goal.</p>
+        {% endfor %}
+      </div>
+      <form method="post" action="{% url 'send_session_message' session.id %}" class="mt-4 space-y-3">{% csrf_token %}
+        {{ chat_form.message }}
+        <button class="rounded-full bg-blue-600 text-white px-5 py-3 font-bold">Send message</button>
+      </form>
+    </section>
+
+    <section class="card p-6">
+      <h2 class="text-2xl font-black mb-4">Proof and timeline</h2>
+      <div class="space-y-3">
+        {% for proof in session.proof_artifacts.all %}
+          <div class="rounded-2xl border p-4 dark:border-slate-700">
+            <p class="font-black">{{ proof.title }}</p>
+            <p class="text-slate-600 dark:text-slate-300">{{ proof.description }}</p>
+            {% if proof.link %}<a class="text-blue-600 font-bold" href="{{ proof.link }}" target="_blank">Open proof</a>{% endif %}
+          </div>
+        {% empty %}<p class="text-slate-500">No proof added yet.</p>{% endfor %}
+      </div>
+      <a href="{% url 'add_proof' session.id %}" class="mt-4 inline-block rounded-full border px-5 py-3 font-bold dark:border-slate-700">Add proof</a>
+    </section>
+  </main>
+
+  <aside class="space-y-6">
+    <section class="card p-6">
+      <h2 class="text-2xl font-black mb-4">Session details</h2>
+      <form method="post" class="space-y-4">{% csrf_token %}
+        {% for field in form %}<div class="form-control"><label class="font-bold block mb-2">{{ field.label }}</label>{{ field }}</div>{% endfor %}
+        <button class="rounded-full bg-blue-600 text-white px-5 py-3 font-bold">Save</button>
+      </form>
+      {% if not session.is_completed %}
+        <form method="post" action="{% url 'complete_session' session.id %}" class="mt-4">{% csrf_token %}<button class="w-full rounded-full bg-emerald-600 text-white px-5 py-3 font-bold">Mark completed</button></form>
+      {% else %}
+        <a href="{% url 'review_session' session.id %}" class="mt-4 block text-center rounded-full bg-yellow-500 text-slate-900 px-5 py-3 font-bold">Leave review</a>
+      {% endif %}
+    </section>
+
+    <section class="card p-6">
+      <h2 class="text-2xl font-black mb-4">Session checklist</h2>
+      <ul class="space-y-3 text-sm text-slate-600 dark:text-slate-300">
+        <li>✅ Agree the learning goal</li>
+        <li>✅ Schedule date and duration</li>
+        <li>✅ Complete video session</li>
+        <li>✅ Add mini assignment or proof</li>
+        <li>✅ Mark completed and review</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+{% endblock %}

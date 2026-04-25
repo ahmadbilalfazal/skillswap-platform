@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}Leaderboard — SkillSwap{% endblock %}
+{% block content %}
+<h1 class="text-4xl font-black mb-2">Growth leaderboard 🏆</h1>
+<p class="text-slate-600 dark:text-slate-300 mb-6">Rankings are based on completed sessions, reviews, and badges.</p>
+<div class="card overflow-hidden">
+  <table class="w-full text-left">
+    <thead class="bg-slate-100 dark:bg-slate-900"><tr><th class="p-4">Rank</th><th class="p-4">User</th><th class="p-4">Score</th><th class="p-4">Completed</th><th class="p-4">Rating</th><th class="p-4">Badges</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+        <tr class="border-t dark:border-slate-800"><td class="p-4 font-black">#{{ forloop.counter }}</td><td class="p-4"><a class="font-black text-blue-600" href="{% url 'profile_detail' row.user.username %}">{{ row.user.username }}</a></td><td class="p-4 font-black">{{ row.score }}</td><td class="p-4">{{ row.completed }}</td><td class="p-4">{{ row.rating }} ⭐</td><td class="p-4">{{ row.badges }}</td></tr>
+      {% empty %}<tr><td class="p-4" colspan="6">No leaderboard data yet.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

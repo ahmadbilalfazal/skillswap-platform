@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}Notifications — SkillSwap{% endblock %}
+{% block content %}
+<div class="mb-8">
+  <h1 class="text-4xl font-black">Notifications</h1>
+  <p class="text-slate-600 dark:text-slate-300 mt-2">Your latest requests, reviews, proof updates, and badge alerts.</p>
+</div>
+<section class="card p-6">
+  <div class="space-y-3">
+    {% for item in notifications %}
+      <a {% if item.url %}href="{{ item.url }}"{% endif %} class="block rounded-2xl border p-4 transition hover:border-blue-400 dark:border-slate-700">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <h2 class="font-black">{{ item.title }}</h2>
+            <p class="text-slate-600 dark:text-slate-300">{{ item.message }}</p>
+          </div>
+          <span class="text-xs text-slate-500 whitespace-nowrap">{{ item.created_at|timesince }} ago</span>
+        </div>
+      </a>
+    {% empty %}
+      <p class="text-slate-500">No notifications yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

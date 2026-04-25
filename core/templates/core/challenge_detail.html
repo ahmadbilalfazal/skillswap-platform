@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% block title %}{{ challenge.title }} — SkillSwap{% endblock %}
+{% block content %}
+<div class="grid lg:grid-cols-3 gap-6">
+  <main class="lg:col-span-2 card p-6">
+    <h1 class="text-4xl font-black">{{ challenge.title }}</h1>
+    <p class="text-slate-600 dark:text-slate-300 mt-4">{{ challenge.description }}</p>
+    <h2 class="text-2xl font-black mt-8 mb-4">Submissions</h2>
+    {% for sub in submissions %}<div class="border-t py-4 dark:border-slate-800"><p class="font-black">{{ sub.title }} by {{ sub.user.username }}</p><p class="text-slate-600 dark:text-slate-300">{{ sub.reflection }}</p>{% if sub.link %}<a class="text-blue-600 font-bold" href="{{ sub.link }}" target="_blank">Open submission</a>{% endif %}<p class="text-sm text-slate-500">Score: {{ sub.score }}</p></div>{% empty %}<p class="text-slate-500">No submissions yet.</p>{% endfor %}
+  </main>
+  <aside class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Submit your work</h2>
+    {% if submission %}<p class="text-emerald-600 font-bold">You already submitted this challenge.</p>{% else %}<form method="post" class="space-y-4">{% csrf_token %}{% for field in form %}<div class="form-control"><label class="font-bold block mb-2">{{ field.label }}</label>{{ field }}</div>{% endfor %}<button class="rounded-full bg-blue-600 text-white px-5 py-3 font-bold">Submit</button></form>{% endif %}
+  </aside>
+</div>
+{% endblock %}

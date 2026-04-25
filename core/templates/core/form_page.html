@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} — SkillSwap{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto card p-6 md:p-8">
+  <h1 class="text-3xl font-black mb-6">{{ title }}</h1>
+  <form method="post" class="space-y-5">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="form-control">
+        <label class="block font-bold mb-2">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<p class="text-sm text-slate-500 mt-1">{{ field.help_text }}</p>{% endif %}
+        {% for error in field.errors %}<p class="text-sm text-red-600 mt-1">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    {% if form.non_field_errors %}<div class="text-red-600">{{ form.non_field_errors }}</div>{% endif %}
+    <button class="rounded-full bg-blue-600 px-6 py-3 font-bold text-white">{{ button }}</button>
+  </form>
+</div>
+{% endblock %}

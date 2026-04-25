@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Challenge Leaderboard — SkillSwap{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+  <div>
+    <h1 class="text-4xl font-black">Challenge leaderboard</h1>
+    <p class="text-slate-600 dark:text-slate-300 mt-2">Ranking based on challenge submissions, review quality, and completed sessions.</p>
+  </div>
+  <a href="{% url 'challenges_list' %}" class="rounded-full border px-5 py-3 font-bold dark:border-slate-700 w-fit">Back to challenges</a>
+</div>
+<div class="card overflow-hidden">
+  <table class="w-full text-left">
+    <thead class="bg-slate-100 dark:bg-slate-900"><tr><th class="p-4">Rank</th><th class="p-4">User</th><th class="p-4">Submissions</th><th class="p-4">Completed</th><th class="p-4">Rating</th><th class="p-4">Score</th></tr></thead>
+    <tbody>
+      {% for row in rows %}
+        <tr class="border-t dark:border-slate-800"><td class="p-4 font-black">#{{ forloop.counter }}</td><td class="p-4"><a class="font-black" href="{% url 'profile_detail' row.user.username %}">{{ row.user.get_full_name|default:row.user.username }}</a></td><td class="p-4">{{ row.submissions }}</td><td class="p-4">{{ row.completed }}</td><td class="p-4">{{ row.rating }} ⭐</td><td class="p-4 font-black">{{ row.score }}</td></tr>
+      {% empty %}
+        <tr><td colspan="6" class="p-8 text-center text-slate-500">No challenge activity yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

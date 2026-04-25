@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Peer Challenges — SkillSwap{% endblock %}
+{% block content %}
+<div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+  <div>
+    <h1 class="text-4xl font-black">Peer challenges</h1>
+    <p class="text-slate-600 dark:text-slate-300 mt-2">Challenge a friend directly, or create a shared challenge for both of you.</p>
+  </div>
+  <a href="{% url 'explore_users' %}" class="rounded-full bg-blue-600 px-5 py-3 font-bold text-white w-fit">Find someone to challenge</a>
+</div>
+
+{% if pending_received %}
+<section class="card p-6 mb-8">
+  <h2 class="text-2xl font-black mb-4">Waiting for your response</h2>
+  <div class="grid md:grid-cols-2 gap-4">
+    {% for challenge in pending_received %}
+      <div class="rounded-3xl border p-5 dark:border-slate-700">
+        <div class="flex justify-between gap-3">
+          <div>
+            <p class="text-sm text-slate-500">From {{ challenge.creator.username }}</p>
+            <h3 class="text-xl font-black">{{ challenge.title }}</h3>
+          </div>
+          <span class="h-fit rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-black dark:bg-yellow-950 dark:text-yellow-200">{{ challenge.get_status_display }}</span>
+        </div>
+        <p class="mt-3 text-slate-600 dark:text-slate-300 line-clamp-3">{{ challenge.description }}</p>
+        {% if challenge.skill_focus %}<p class="mt-3 text-sm font-bold text-blue-600">Skill: {{ challenge.skill_focus }}</p>{% endif %}
+        <div class="mt-4 flex flex-wrap gap-2">
+          <a href="{% url 'peer_challenge_detail' challenge.id %}" class="rounded-full border px-4 py-2 font-bold dark:border-slate-700">View</a>
+          <form method="post" action="{% url 'accept_peer_challenge' challenge.id %}">{% csrf_token %}<button class="rounded-full bg-emerald-600 px-4 py-2 font-bold text-white">Accept</button></form>
+          <form method="post" action="{% url 'reject_peer_challenge' challenge.id %}">{% csrf_token %}<button class="rounded-full border border-red-200 px-4 py-2 font-bold text-red-600">Reject</button></form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+<section class="grid lg:grid-cols-2 gap-6">
+  <div class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Active challenges</h2>
+    <div class="space-y-4">
+      {% for challenge in active %}
+        <a href="{% url 'peer_challenge_detail' challenge.id %}" class="block rounded-3xl border p-5 hover:-translate-y-1 transition dark:border-slate-700">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="text-xl font-black">{{ challenge.title }}</h3>
+            <span class="rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs font-black dark:bg-blue-950 dark:text-blue-200">{{ challenge.progress_percent }}%</span>
+          </div>
+          <p class="mt-2 text-sm text-slate-500">{{ challenge.creator.username }} → {{ challenge.target.username }} · {{ challenge.get_mode_display }}</p>
+          <div class="mt-4 h-2 rounded-full bg-slate-200 dark:bg-slate-800">
+            <div class="h-2 rounded-full bg-blue-600" style="width: {{ challenge.progress_percent }}%"></div>
+          </div>
+        </a>
+      {% empty %}
+        <p class="text-slate-500">No active peer challenges yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card p-6">
+    <h2 class="text-2xl font-black mb-4">Sent by you</h2>
+    <div class="space-y-4">
+      {% for challenge in sent %}
+        <div class="rounded-3xl border p-5 dark:border-slate-700">
+          <div class="flex items-center justify-between gap-3">
+            <h3 class="text-xl font-black">{{ challenge.title }}</h3>
+            <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black dark:bg-slate-900">{{ challenge.get_status_display }}</span>
+          </div>
+          <p class="mt-2 text-sm text-slate-500">To {{ challenge.target.username }} · {{ challenge.get_mode_display }}</p>
+          <div class="mt-4 flex flex-wrap gap-2">
+            <a href="{% url 'peer_challenge_detail' challenge.id %}" class="rounded-full border px-4 py-2 font-bold dark:border-slate-700">View</a>
+            {% if challenge.status == 'pending' or challenge.status == 'accepted' %}
+              <form method="post" action="{% url 'cancel_peer_challenge' challenge.id %}">{% csrf_token %}<button class="rounded-full border border-red-200 px-4 py-2 font-bold text-red-600">Cancel</button></form>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-slate-500">You have not sent any peer challenges yet.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="card p-6 mt-8">
+  <h2 class="text-2xl font-black mb-4">Completed peer challenges</h2>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for challenge in completed %}
+      <a href="{% url 'peer_challenge_detail' challenge.id %}" class="rounded-3xl border p-5 dark:border-slate-700">
+        <p class="text-sm text-slate-500">Completed</p>
+        <h3 class="text-xl font-black">{{ challenge.title }}</h3>
+        <p class="mt-2 text-sm text-slate-500">{{ challenge.creator.username }} + {{ challenge.target.username }}</p>
+      </a>
+    {% empty %}
+      <p class="text-slate-500">No completed peer challenges yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
