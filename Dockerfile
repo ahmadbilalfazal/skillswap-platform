@@ -12,6 +12,10 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 COPY . /app/
 
-RUN python manage.py collectstatic --noinput && python manage.py migrate || true
+# Do not run migrations during image build (build environment may not have runtime DATABASE_URL).
+# Instead copy a startup script that will run migrations/collectstatic at container start
+# so they run against the runtime database provided by Render.
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["/app/start.sh"]
